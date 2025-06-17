@@ -39,8 +39,8 @@ Asynchronous FIFO/
 
 ## Authors
 
-- Ekansh Bansal ([ekanshbansal](https://github.com/ekb0412))
-- Arin Singh ([arinsingh](https://github.com/Arin2808))
-- Ayushmoy Datta ([ayushmoydatta](https://github.com/aushmoy))
-- Satyam Triphati ([satyamtripathi](https://github.com/SatyamTripathi13))
+- [Ekansh Bansal](https://github.com/ekb0412)
+- [Arin Singh](https://github.com/Arin2808)
+- [Ayushmoy Datta](https://github.com/aushmoy)
+- [Satyam Triphati](https://github.com/SatyamTripathi13)
 
