@@ -16,10 +16,11 @@ AHB/
   AHB_slave.v         # AHB slave control unit
 Asynchronous FIFO/
   design/
-    async_fifo_ctrl.v    # Asynchronous FIFO controller
     async_fifo_top.v     # Top-level FIFO module
+    async_fifo_ctrl.v    # Asynchronous FIFO controller
     fifo_mem.v           # FIFO memory block
-    gray_code.v          # Gray code converters
+    bin2grav.v           # binary to gray code converter
+    gray2bin.v           # gray to binary code converter
     sync_flop.v          # Synchronizer flops
     test_async_fifo.v    # FIFO testbench
   verification/
@@ -37,7 +38,7 @@ Asynchronous FIFO/
 2. **Simulate the design** using your preferred SystemVerilog simulator (e.g., ModelSim, Questasim).
 3. **Run testbenches** in `Asynchronous FIFO/design/test_async_fifo.v` to verify functionality.
 
-## Authors
+## Collaborators
 
 - [Ekansh Bansal](https://github.com/ekb0412)
 - [Arin Singh](https://github.com/Arin2808)
