@@ -1,42 +1,35 @@
 # AHB-Lite to SPI Bridge: Design & Verification
 
-This project implements and verifies an efficient bridge between AHB-Lite and SPI protocols, enabling seamless communication between high-speed AHB-based SoC systems and SPI peripherals. The design focuses on robust protocol conversion, data integrity, and reliable integration for SoC architectures.
+This project presents a comprehensive solution for bridging AHB-Lite and SPI protocols, facilitating seamless communication between high-speed AHB-based System-on-Chip (SoC) systems and a wide range of SPI peripherals. The bridge is designed to ensure robust protocol conversion, maintain data integrity, and provide reliable integration within complex SoC architectures. The implementation leverages asynchronous FIFO buffers to safely transfer data across different clock domains, and the entire design is rigorously verified using SystemVerilog and UVM-style methodologies.
 
-## Features
+## Key Features
 
-- **AHB-Lite to SPI Protocol Conversion:** Converts AHB-Lite transactions to SPI-compatible operations and vice versa.
-- **Asynchronous FIFO Buffers:** Ensures safe and efficient data transfer across different clock domains.
-- **Data Integrity:** Implements error handling and data alignment for reliable communication.
-- **SystemVerilog UVM-style Verification:** Includes testbenches, drivers, monitors, generators, and transactions for comprehensive functional verification.
+- **Seamless Protocol Bridging:**  
+  Efficiently translates AHB-Lite bus transactions into SPI-compatible operations, enabling direct interfacing between SoC masters and SPI slave devices without manual intervention or protocol mismatches.
 
-## Directory Structure
+- **Asynchronous FIFO Buffers:**  
+  Integrates dual-clock FIFO buffers to safely and efficiently transfer data between the AHB-Lite and SPI clock domains. This ensures reliable data passage even when the two domains operate at different frequencies.
 
-```
-AHB/
-  AHB_slave.v         # AHB slave control unit
-Asynchronous FIFO/
-  design/
-    async_fifo_top.v     # Top-level FIFO module
-    async_fifo_ctrl.v    # Asynchronous FIFO controller
-    fifo_mem.v           # FIFO memory block
-    bin2grav.v           # binary to gray code converter
-    gray2bin.v           # gray to binary code converter
-    sync_flop.v          # Synchronizer flops
-    test_async_fifo.v    # FIFO testbench
-  verification/
-    fifo_read_if.sv      # Read interface
-    fifo_write_if.sv     # Write interface
-    fifo_transaction.sv  # Transaction object
-    fifo_generator.sv    # Transaction generator
-    fifo_driver.sv       # Driver for FIFO verification
-    fifo_monitor.sv      # Monitor for FIFO activity
-```
+- **Robust Data Integrity:**  
+  Implements comprehensive error detection, data alignment, and correction mechanisms to guarantee that data transferred between protocols remains accurate and consistent.
+
+- **Flexible and Scalable Architecture:**  
+  The modular design allows for easy customization and scaling, making it suitable for a variety of SoC applications and SPI device configurations.
+
+- **Comprehensive Verification Environment:**  
+  Includes a full suite of SystemVerilog UVM-style verification components such as testbenches, drivers, monitors, generators, and transaction objects. This ensures thorough functional verification and validation of the bridge under various scenarios.
+
+- **Extensive Testbenches:**  
+  Provides ready-to-use testbenches for both the asynchronous FIFO and the protocol bridge, enabling users to quickly simulate and validate the design using industry-standard tools like ModelSim or Questasim.
+
+- **Clear Documentation and Collaboration:**  
+  The project is well-documented, with clear instructions for setup, simulation, and verification. Contributions from multiple collaborators ensure a robust and well-reviewed codebase.
 
 ## Getting Started
 
-1. **Clone the repository**
+1. **Clone the repository** to your local machine.
 2. **Simulate the design** using your preferred SystemVerilog simulator (e.g., ModelSim, Questasim).
-3. **Run testbenches** in `Asynchronous FIFO/design/test_async_fifo.v` to verify functionality.
+3. **Run the provided testbenches** to verify the functionality and robustness of the asynchronous FIFO and protocol bridge modules.
 
 ## Collaborators
 
