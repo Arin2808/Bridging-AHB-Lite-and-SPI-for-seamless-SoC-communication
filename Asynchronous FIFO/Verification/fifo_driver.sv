@@ -1,77 +1,44 @@
-class fifo_driver #(parameter DATA_WIDTH = 41);
+// UVM driver for asynchronous FIFO
 
-    // Transaction handle
-    fifo_transaction #(DATA_WIDTH) fifo_pkt;
+class fifo_driver extends uvm_driver #(fifo_transaction);
+    `uvm_component_utils(fifo_driver)
 
-    // Mailboxes
-    mailbox gen2drv;      // From generator
-    mailbox drv2scb;      // To scoreboard
+    virtual fifo_if vif;
 
-    // Event to signal completion
-    event gen_done;
-
-    // Virtual interfaces
-    virtual fifo_write_if.wr_drv_mp wr_drv_vif;
-    virtual fifo_read_if.rd_drv_mp  rd_drv_vif;
-
-    string name;
-
-    //log 
-    function void log(string message);
-        $display("[%t] INFO [GEN %s]: %s",$time, this.name, message);
+    function new(string name, uvm_component parent);
+        super.new(name, parent);
+        `uvm_info("FIFO_DRIVER", "Constructor called", UVM_LOW)
     endfunction
 
-    // Constructor
-    function new(string name = "fifo_driver");
-        this.name = name;
-        log("FIFO_DRIVER_BUILD");
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        `uvm_info("FIFO_DRIVER", "Build phase started", UVM_LOW)
+        if (!uvm_config_db#(virtual fifo_if)::get(this, "", "vif", vif))
+            `uvm_fatal("NO_VIF", "Virtual interface not set for driver")
+        else
+            `uvm_info("FIFO_DRIVER", "Virtual interface set for driver", UVM_LOW)
     endfunction
 
-    // Connect mailboxes and interface
-    function void connect(mailbox gen2drv, mailbox drv2scb, event gen_done, virtual fifo_write_if.wr_drv_mp wr_drv_vif, virtual fifo_read_if.rd_drv_mp rd_drv_vif);
-        this.gen2drv = gen2drv;
-        this.drv2scb = drv2scb;
-        this.gen_done = gen_done;
-        this.wr_drv_vif = wr_drv_vif;
-        this.rd_drv_vif = rd_drv_vif;
-        log("FIFO_DRIVER_CONNECT");
-    endfunction
-
-    // Run task: fork write and read, each for itration times
-    task run(input int itration);
-        fifo_pkt = new();
-        fork
-            write_proc(itration);
-            read_proc(itration);
-        join
-    endtask
-
-    // Write process: drives write transactions from mailbox
-    task write_proc(input int itration);
-        wait(gen_done.triggered);
-        while(wr_drv_vif.wr_rst_n == 1'b0) @(wr_drv_vif.cb_driver);
-        repeat(itration) begin
-            @(wr_drv_vif.cb_driver);
-            gen2drv.get(fifo_pkt);
-            drv2scb.put(fifo_pkt);
-            wr_drv_vif.cb_driver.wr_en   <= fifo_pkt.wr_en;
-            wr_drv_vif.cb_driver.wr_data <= fifo_pkt.wdata;
-            fifo_pkt.display("DRV_WRITE");
+    task run_phase(uvm_phase phase);
+        super.run_phase(phase);
+        `uvm_info("FIFO_DRIVER", "Run phase started", UVM_LOW)
+        forever begin
+            fifo_transaction tx;
+            @(posedge vif.wr_clk);
+            seq_item_port.get_next_item(tx);
+//             `uvm_info("FIFO_DRIVER", "Printing transaction req:", UVM_MEDIUM)
+//             tx.print(); // This prints all fields of tx
+            do_drive(tx);
+            seq_item_port.item_done();
         end
-        wr_drv_vif.cb_driver.wr_en <= 0;
     endtask
 
-    // Read process: asserts rd_en for each iteration
-    task read_proc(input int itration);
-        wait(gen_done.triggered);
-        while(rd_drv_vif.rd_rst_n == 1'b0) @(rd_drv_vif.cb_driver);
-        repeat(itration) begin
-            @(rd_drv_vif.cb_driver);
-            gen2drv.get(fifo_pkt);
-            drv2scb.put(fifo_pkt);
-            rd_drv_vif.cb_driver.rd_en <= fifo_pkt.rd_en;
-        end
-        rd_drv_vif.cb_driver.rd_en <= 0;
+    task do_drive(fifo_transaction tx);
+        vif.wr_en = tx.wr_en;
+        vif.wr_data = tx.wr_data;
+        @(posedge vif.rd_clk);
+        vif.rd_en = tx.rd_en;
+        `uvm_info("FIFO_DRIVER", "Driving transaction:", UVM_MEDIUM)
+        tx.print();
     endtask
-
 endclass

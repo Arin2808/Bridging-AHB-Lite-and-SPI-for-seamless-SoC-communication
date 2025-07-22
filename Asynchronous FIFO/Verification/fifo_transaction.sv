@@ -1,38 +1,35 @@
-class fifo_transaction #(parameter DATA_WIDTH = 41);
+// UVM transaction class for asynchronous FIFO
 
-    // Data and control fields
-    rand bit [DATA_WIDTH-1:0] wdata;
-    rand bit                  wr_en;
-    rand bit                  rd_en;
-    // Control signals
-    bit                      full;
-    bit                      empty;
-    // Output data (read)
-    bit [DATA_WIDTH-1:0]      rdata;
+class fifo_transaction extends uvm_sequence_item;
+    randc bit [40:0] wr_data; // Matches DATA_WIDTH=41
+    rand bit wr_en;
+    rand bit rd_en;
+    bit [40:0] rd_data;
+    bit full;
+    bit empty;
 
-    constraint c {
-        if (!full) {
-            wr_en == 1'b1; // write if not full
-        }
+    `uvm_object_utils_begin(fifo_transaction)
+        `uvm_field_int(wr_data, UVM_ALL_ON)
+        `uvm_field_int(wr_en, UVM_ALL_ON)
+        `uvm_field_int(rd_en, UVM_ALL_ON)
+        `uvm_field_int(rd_data, UVM_ALL_ON)
+        `uvm_field_int(full, UVM_ALL_ON)
+        `uvm_field_int(empty, UVM_ALL_ON)
+    `uvm_object_utils_end
 
-        if (!empty) {
-            rd_en == 1'b1; // read if not empty
-        }
+    function new(string name = "fifo_transaction");
+        super.new(name);
+    endfunction
 
-        wdata inside {[0:20]}; // Example range for wdata 0 to 20
+    constraint wr_en_full {
+        (full == 0) -> (wr_en == 1);
+        (full == 1) -> (wr_en == 0);
     }
-
-    // Constructor
-    function new();
-        wdata = '0;
-        wr_en = 0;
-        rd_en = 0;
-        rdata = '0;
-    endfunction
-
-    // Display method for debugging
-    function void display(string prefix = "");
-        $display("[%s] wdata=%0h wr_en=%0b rd_en=%0b rdata=%0h", prefix, wdata, wr_en, rd_en, rdata);
-    endfunction
-
+    constraint rd_en_empty {
+        (empty == 0) -> (rd_en == 1);
+        (empty == 1) -> (rd_en == 0);
+    }
+    constraint data {
+        wr_data inside {[0:10]};
+    }
 endclass
