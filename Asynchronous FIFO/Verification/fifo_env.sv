@@ -8,6 +8,7 @@ class fifo_env extends uvm_env;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
+        `uvm_info("FIFO_ENV", "Constructor called", UVM_LOW)
     endfunction
 
     function void build_phase(uvm_phase phase);
@@ -21,7 +22,8 @@ class fifo_env extends uvm_env;
     function void connect_phase(uvm_phase phase);
         super.connect_phase(phase);
         `uvm_info("FIFO_ENV", "Connect phase started", UVM_LOW)
-        agent.monitor.ap.connect(scoreboard.ap);
-        `uvm_info("FIFO_ENV", "Monitor analysis port connected to scoreboard",UVM_LOW)
+        agent.agent_mon_export.connect(scoreboard.port_mon);
+        agent.agent_drv_export.connect(scoreboard.port_drv);
+        `uvm_info("FIFO_ENV", "Monitor and driver analysis exports connected to scoreboard", UVM_LOW)
     endfunction
 endclass

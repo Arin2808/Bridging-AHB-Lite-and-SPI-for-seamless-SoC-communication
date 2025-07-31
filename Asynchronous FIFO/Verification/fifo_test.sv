@@ -8,6 +8,7 @@ class fifo_test extends uvm_test;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
+        `uvm_info("FIFO_TEST", "Constructor called", UVM_LOW)
     endfunction
 
     function void build_phase(uvm_phase phase);
@@ -16,6 +17,10 @@ class fifo_test extends uvm_test;
         env = fifo_env::type_id::create("env", this);
         uvm_config_db#(uvm_active_passive_enum)::set(this, "env.agent", "is_active", UVM_ACTIVE);
         `uvm_info("FIFO_TEST", "Environment created and agent set to active", UVM_LOW)
+    endfunction
+
+    function void end_of_elaboration_phase(uvm_phase phase);
+        uvm_top.print_topology();
     endfunction
 
     task run_phase(uvm_phase phase);

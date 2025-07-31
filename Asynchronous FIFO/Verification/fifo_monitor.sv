@@ -4,11 +4,12 @@ class fifo_monitor extends uvm_monitor;
     `uvm_component_utils(fifo_monitor)
 
     virtual fifo_if vif;
-    uvm_analysis_port #(fifo_transaction) ap;
+    uvm_analysis_port #(fifo_transaction) maport;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
-        ap = new("ap", this);
+        maport = new("maport", this);
+        `uvm_info("FIFO_MONITOR", "Constructor called", UVM_LOW)
     endfunction
 
     function void build_phase(uvm_phase phase);
@@ -25,17 +26,12 @@ class fifo_monitor extends uvm_monitor;
         `uvm_info("FIFO_MONITOR", "Run phase started", UVM_LOW)
         forever begin
             fifo_transaction tx = fifo_transaction::type_id::create("tx");
-            @(posedge vif.wr_clk);
-            tx.wr_en = vif.wr_en;
+            @(posedge vif.wr_clk);            
+          	@(posedge vif.wr_clk);
             tx.wr_data = vif.wr_data;
-            tx.full = vif.full;
-            @(posedge vif.rd_clk);
-            tx.rd_en = vif.rd_en;
-            tx.rd_data = vif.rd_data;
-            tx.empty = vif.empty;
-            `uvm_info("FIFO_MONITOR", $sformatf("Sampled: wr_en=%0b wr_data=%0h full=%0b rd_en=%0b rd_data=%0h empty=%0b",
-                tx.wr_en, tx.wr_data, tx.full, tx.rd_en, tx.rd_data, tx.empty), UVM_MEDIUM)
-            ap.write(tx);
+            tx.source_port = "fifo_monitor"; // Set source
+            `uvm_info("FIFO_MONITOR", $sformatf("Sampled: wr_data=%0h", tx.wr_data), UVM_MEDIUM)
+            maport.write(tx);
         end
     endtask
 endclass

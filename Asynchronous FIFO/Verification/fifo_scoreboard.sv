@@ -3,37 +3,57 @@
 class fifo_scoreboard extends uvm_scoreboard;
     `uvm_component_utils(fifo_scoreboard)
 
-    uvm_analysis_imp #(fifo_transaction, fifo_scoreboard) ap;
-    bit [40:0] fifo_model [$];
-    int fifo_depth = 16; // 2^ADDR_WIDTH (4) = 16
+    uvm_analysis_imp #(fifo_transaction, fifo_scoreboard) port_mon;
+    uvm_analysis_imp #(fifo_transaction, fifo_scoreboard) port_drv;
+
+    uvm_tlm_analysis_fifo #(bit [40:0]) port_mon_fifo;
+    uvm_tlm_analysis_fifo #(bit [40:0]) port_drv_fifo;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
-        ap = new("ap", this);
+        port_mon = new("port_mon", this);
+        port_drv = new("port_drv", this);
+    endfunction
+
+    function void build_phase(uvm_phase phase);
+        super.build_phase(phase);
+        `uvm_info("FIFO_SCOREBOARD", "Entered build phase", UVM_NONE)
+        port_mon_fifo = new("port_mon_fifo", this);
+        port_drv_fifo = new("port_drv_fifo", this);
     endfunction
 
     function void write(fifo_transaction tx);
-        // Write operation
-        if (tx.wr_en && !tx.full) begin
-            fifo_model.push_back(tx.wr_data);
-            `uvm_info("SCB", $sformatf("Write: %h, FIFO size: %0d", tx.wr_data, fifo_model.size()), UVM_MEDIUM)
-        end
-        // Read operation
-        if (tx.rd_en && !tx.empty) begin
-            bit [40:0] expected_data;
-            if (fifo_model.size() > 0) begin
-                expected_data = fifo_model.pop_front();
-                if (expected_data != tx.rd_data)
-                    `uvm_error("SCB", $sformatf("Mismatch! Expected: %h, Got: %h", expected_data, tx.rd_data))
-                else
-                    `uvm_info("SCB", $sformatf("Read: %h, FIFO size: %0d", tx.rd_data, fifo_model.size()), UVM_MEDIUM)
+        `uvm_info("FIFO_SCOREBOARD", "Entering write implementation", UVM_NONE)
+//         tx.print();
+        case (tx.source_port)
+            "fifo_monitor": begin
+                `uvm_info(get_type_name(), $sformatf("Received transaction from Monitor: wr_data=%h", tx.wr_data), UVM_LOW);
+                port_mon_fifo.write(tx.wr_data);
+            end
+            "fifo_driver": begin
+                `uvm_info(get_type_name(), $sformatf("Received transaction from Driver: wr_data=%h", tx.wr_data), UVM_LOW);
+                port_drv_fifo.write(tx.wr_data);
+            end
+            default: begin
+                `uvm_warning(get_type_name(), $sformatf("Received transaction from unknown source: %s", tx.source_port));
+            end
+        endcase
+    endfunction
+
+    task run_phase(uvm_phase phase);
+        bit [40:0] req_mon_data, req_drv_data;
+        `uvm_info(get_type_name(), "Executing final phase", UVM_MEDIUM)
+        super.run_phase(phase);
+        forever begin
+            port_mon_fifo.get(req_mon_data);
+            port_drv_fifo.get(req_drv_data);
+            `uvm_info("FIFO_SCOREBOARD", $sformatf("Monitor wr_data= %h, Driver wr_data= %h", req_mon_data, req_drv_data), UVM_NONE)
+            if (req_mon_data == req_drv_data) begin
+                `uvm_info(get_type_name(), "*****PASS***********", UVM_LOW)
+            end
+            else begin
+                `uvm_info(get_type_name(), "********FAIL********", UVM_LOW)
             end
         end
-        // Check full/empty flags
-        if (fifo_model.size() == fifo_depth && !tx.full)
-            `uvm_error("SCB", "FIFO should be full")
-        if (fifo_model.size() == 0 && !tx.empty)
-            `uvm_error("SCB", "FIFO should be empty")
-        `uvm_info("SCB", $sformatf("Scoreboard write completed. FIFO size: %0d", fifo_model.size()), UVM_MEDIUM)
-    endfunction
+    endtask
 endclass

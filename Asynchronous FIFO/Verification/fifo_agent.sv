@@ -6,9 +6,14 @@ class fifo_agent extends uvm_agent;
     fifo_driver driver;
     fifo_monitor monitor;
     uvm_sequencer #(fifo_transaction) sequencer;
+    uvm_analysis_export #(fifo_transaction) agent_mon_export;
+    uvm_analysis_export #(fifo_transaction) agent_drv_export;
 
     function new(string name, uvm_component parent);
         super.new(name, parent);
+        agent_mon_export = new("agent_mon_export", this);
+        agent_drv_export = new("agent_drv_export", this);
+        `uvm_info("FIFO_AGENT", "Constructor called", UVM_LOW)
     endfunction
 
     function void build_phase(uvm_phase phase);
@@ -31,6 +36,10 @@ class fifo_agent extends uvm_agent;
         if (get_is_active()) begin
             driver.seq_item_port.connect(sequencer.seq_item_export);
             `uvm_info("FIFO_AGENT", "Driver connected to sequencer", UVM_LOW)
+            driver.dport.connect(this.agent_drv_export);
+            `uvm_info("MY_AGENT","driver port and agent export2 connection is done ",UVM_NONE)
         end
+        monitor.maport.connect(this.agent_mon_export);
+        `uvm_info("MY_AGENT","monitor port and agent export1 connection is done ",UVM_NONE)
     endfunction
 endclass
