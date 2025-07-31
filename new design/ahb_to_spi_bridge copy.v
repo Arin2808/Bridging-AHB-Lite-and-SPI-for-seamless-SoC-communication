@@ -1,22 +1,26 @@
 `timescale 1ns / 1ps
 
 module ahb_to_spi_bridge (
-    // AHB slave interface
+    // AHB master interface
     input  wire        HCLK,          // AHB clock
-    input  wire        HRESET,        // Active-high reset
-    input  wire [7:0]  HADDR,         // AHB address input
-    input  wire [1:0]  HTRANS,        // AHB transfer type
-    input  wire        HWRITE,        // AHB write/read control
-    input  wire [2:0]  HSIZE,         // AHB transfer size
-    input  wire [2:0]  HBURST,        // AHB burst type
-    input  wire [31:0] HWDATA,        // AHB write data
+    input  wire        rst,           // Active-high reset
+    input  wire [7:0]  addr,          // AHB address input
+    input  wire [2:0]  size,          // AHB transfer size
+    input  wire        write,         // AHB write/read control
+    input  wire [2:0]  burst,         // AHB burst type
+    input  wire        start,         // Start signal for AHB master
     output wire [31:0] HRDATA,        // AHB read data
     output wire        HREADY,        // AHB ready signal
     output wire        HRESP,         // AHB response signal
-
+    output wire [7:0]  HADDR,         // AHB address
+    output wire [1:0]  HTRANS,        // AHB transfer type
+    output wire        HWRITE,        // AHB write/read
+    output wire [2:0]  HSIZE,         // AHB size
+    output wire [2:0]  HBURST,        // AHB burst
+    output wire [31:0] HWDATA,        // AHB write data
+    output wire        done,          // AHB transaction done
     // SPI master interface (to external SPI slaves)
-    input  wire        SCLK,          // SPI clock
-    input  wire        SRESET,        // SPI reset
+    input  wire        clk_spi,       // SPI clock
     output wire        spi_clk,       // SPI clock output
     output wire        spi_mosi,      // SPI Master Out Slave In
     input  wire        spi_miso,      // SPI Master In Slave Out
@@ -38,9 +42,30 @@ module ahb_to_spi_bridge (
     wire [31:0] rx_fifo_data_in;
     wire        rx_fifo_write_en;
 
+    // AHB master
+    AHB_master ahb_master (
+        .HCLK(HCLK),
+        .rst(rst),
+        .HRDATA(HRDATA),
+        .HREADY(HREADY),
+        .HRESP(HRESP),
+        .addr(addr),
+        .size(size),
+        .write(write),
+        .burst(burst),
+        .start(start),
+        .HADDR(HADDR),
+        .HTRANS(HTRANS),
+        .HWRITE(HWRITE),
+        .HSIZE(HSIZE),
+        .HBURST(HBURST),
+        .HWDATA(HWDATA),
+        .done(done)
+    );
+
     // AHB slave
     AHB_slave ahb_slave (
-        .HRESET(HRESET),
+        .rst(rst),
         .HCLK(HCLK),
         .HADDR(HADDR),
         .HTRANS(HTRANS),
@@ -62,11 +87,11 @@ module ahb_to_spi_bridge (
     // TX FIFO (AHB to SPI)
     async_fifo_tx tx_fifo (
         .wr_clk(HCLK),
-        .wr_rst(HRESET),              // Write domain reset (active-high)
+        .wr_rst(rst),              // Write domain reset (active-high)
         .wr_en(tx_fifo_write_en),
         .wr_data(tx_fifo_data_in),
-        .rd_clk(SCLK),
-        .rd_rst(SRESET),              // Read domain reset (active-high)
+        .rd_clk(clk_spi),
+        .rd_rst(rst),              // Read domain reset (active-high)
         .rd_en(tx_fifo_read_en),
         .rd_data(tx_fifo_data_out),
         .full(tx_fifo_full),
@@ -75,12 +100,12 @@ module ahb_to_spi_bridge (
 
     // RX FIFO (SPI to AHB)
     async_fifo_rx rx_fifo (
-        .wr_clk(SCLK),
-        .wr_rst(SRESET),              // Write domain reset (active-high)
+        .wr_clk(clk_spi),
+        .wr_rst(rst),              // Write domain reset (active-high)
         .wr_en(rx_fifo_write_en),
         .wr_data(rx_fifo_data_in),
         .rd_clk(HCLK),
-        .rd_rst(HRESET),              // Read domain reset (active-high)
+        .rd_rst(rst),              // Read domain reset (active-high)
         .rd_en(rx_fifo_read_en),
         .rd_data(rx_fifo_data_out),
         .full(rx_fifo_full),
@@ -89,8 +114,8 @@ module ahb_to_spi_bridge (
 
     // SPI master
     spi_master spi_master (
-        .SCLK(SCLK),
-        .SRESET(SRESET),
+        .clk(clk_spi),
+        .rst(rst),
         .spi_clk(spi_clk),
         .spi_mosi(spi_mosi),
         .spi_miso(spi_miso),
