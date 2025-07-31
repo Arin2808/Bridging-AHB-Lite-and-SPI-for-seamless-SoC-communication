@@ -4,7 +4,7 @@ module sync_flop #(
     parameter WIDTH = 5
 )(
     input  wire              clk,
-    input  wire              rst,         // Active-high reset
+    input  wire              rst,
     input  wire [WIDTH-1:0]  async_in,
     output reg  [WIDTH-1:0]  sync_out
 );

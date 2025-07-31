@@ -18,11 +18,11 @@ module async_fifo_rx (
         .ADDR_WIDTH(4)
     ) u_async_fifo_rx (
         .wr_clk(wr_clk),
-        .wr_rst(wr_rst),      // Write domain reset (active-high)
+        .wr_rst(wr_rst),      
         .wr_en(wr_en),
         .wr_data(wr_data),
         .rd_clk(rd_clk),
-        .rd_rst(rd_rst),      // Read domain reset (active-high)
+        .rd_rst(rd_rst),      
         .rd_en(rd_en),
         .full(full),
         .empty(empty),

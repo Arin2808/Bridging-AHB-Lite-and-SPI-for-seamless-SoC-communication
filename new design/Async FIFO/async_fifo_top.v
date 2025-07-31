@@ -1,8 +1,4 @@
 `timescale 1ns / 1ps
-/*
- * Top-level module instantiating the asynchronous FIFO controller
- * Example usage: instantiate async_fifo_ctrl with parameters
- */
 
 module async_fifo_top #(
     parameter DATA_WIDTH = 41,
